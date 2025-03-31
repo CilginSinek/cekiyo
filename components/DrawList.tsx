@@ -15,11 +15,11 @@ interface DrawListProps {
 export default function DrawList(props: DrawListProps): JSX.Element {
   const router = useRouter();
 
-  const handleDetail = (id: string) => {
-    router.push(`/${id}`);
+  const handleDetail = (id: number) => {
+    router.push(`/cekiyo/${id}`);
   };
 
-  const handleSetDraw = (draw_id: string, user: User) => {
+  const handleSetDraw = (draw_id: number, user: User) => {
     fetch(`${window.location.origin}/api/DrawRegs`, {
       method: "POST",
       headers: {
@@ -44,8 +44,10 @@ export default function DrawList(props: DrawListProps): JSX.Element {
           } else {
             newDraw.drawUsers.push(user);
           }
-          if(props.setDrawList){
-            const newDraws = props.drawList.filter((draw) => draw.id != draw_id);
+          if (props.setDrawList) {
+            const newDraws = props.drawList.filter(
+              (draw) => draw.id != draw_id
+            );
             const updatedDraws = [...newDraws, newDraw];
             updatedDraws.sort(
               (a, b) => a.updatedAt.getTime() - b.updatedAt.getTime()
@@ -59,10 +61,10 @@ export default function DrawList(props: DrawListProps): JSX.Element {
       });
   };
   return (
-    <div className="p-4">
+    <div className="p-4 bg-gray-800 text-white rounded-lg">
       <h1 className="text-2xl font-bold mb-4">{props.name}</h1>
-      <ul className="space-y-4">
-        {props.drawList.map((draw) => (
+      <ul className="space-y-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-700">
+        {props.drawList.slice(0, 4).map((draw) => (
           <DrawListElement
             key={draw.id}
             draw={draw}

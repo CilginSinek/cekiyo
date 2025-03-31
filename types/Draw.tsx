@@ -1,7 +1,7 @@
 import User from "./User";
 
 type Draw = {
-    id: string;
+    id: number;
     drawName: string;
     drawUsers: User[];
     drawWinners: User[];

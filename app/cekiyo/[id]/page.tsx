@@ -1,41 +1,28 @@
 "use client";
-import { useParams } from "next/navigation";
 import Draw from "@/types/Draw";
-import User from "@/types/User";
+import { useEffect, useState } from "react";
 
-export default function Page() {
-  const { id } = useParams();
+interface Props {
+  draw: Draw;
+}
 
-  const user: User = {
-    topluyoId: "7",
-    nick: "buneakpelus",
-    image: "https://cdn.topluyo.com/logo/674be83b153d6.gif",
-    groupNick: "ef48b6c2a2678b8e",
-    groupName: "banl\u0131yorum herkesi",
-    isOwnerMode: true,
-  };
-  // Örnek veri
-  const draw: Draw = {
-    id: id as string,
-    drawName: `Çekiliş ${id}`,
-    drawStatus: "open",
-    drawUsers: [],
-    drawWinners: [],
-    drawDescription: "Bu bir çekiliş açıklamasıdır.",
-    drawOwner: user,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    drawDate: new Date(),
-    closeTime: new Date(),
-    drawPrize: "Ödül",
-  };
+export default function Page({ draw }: Props) {
+  const [stateDraw, setStateDraw] = useState<Draw | null>(draw ? draw : null);
 
+  useEffect(() => {
+    if (draw) {
+      setStateDraw(draw);
+    }
+  }, []);
 
+  if (!stateDraw) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div>
-      <h1>{draw.drawName}</h1>
-      <p>{draw.drawDescription}</p>
+      <h1>{stateDraw.drawName}</h1>
+      <p>{stateDraw.drawDescription}</p>
     </div>
   );
 }

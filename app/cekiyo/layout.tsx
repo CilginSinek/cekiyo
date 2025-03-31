@@ -2,28 +2,31 @@
 import React from "react";
 import prisma from "@/utils/prisma";
 import Draw from "@/types/Draw";
-import Page from "./page"; // Page bileşenini içe aktar
 import DrawList from "@/components/DrawList";
 import User from "@/types/User";
+import { cookies } from "next/headers";
+import { decoderToken } from "@/utils/handler";
 
 export default async function CekiyoLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const getActiveDraws = async (): Promise<Draw[]> => {
     try {
-      const draws: Draw[] = await prisma.draw.findMany({
+      const activeDraws = await prisma.draw.findMany({
         where: {
           drawStatus: "open",
         },
       });
-
-      return draws.map((draw: Draw) => ({
+      console.log(activeDraws);
+      const formatedDraws: Draw[] = activeDraws.map((draw) => ({
         ...draw,
-        drawDate: new Date(draw.drawDate),
-        createdAt: new Date(draw.createdAt),
-        updatedAt: new Date(draw.updatedAt),
+        drawStatus: draw.drawStatus as "open" | "closed" | "finished",
+        drawUsers: Array.isArray(draw.drawUsers) ? draw.drawUsers as User[] : [],
+        drawWinners: Array.isArray(draw.drawWinners) ? draw.drawWinners as User[]: [],
+        drawOwner: draw.drawOwner as User,
         closeTime: draw.closeTime ? new Date(draw.closeTime) : undefined,
       }));
+      return formatedDraws;
     } catch (e) {
       console.error(e);
       return [] as Draw[];
@@ -32,7 +35,7 @@ export default async function CekiyoLayout({
 
   const getOldDraws = async (): Promise<Draw[]> => {
     try {
-      const draws: Draw[] = await prisma.draw.findMany({
+      const draws = await prisma.draw.findMany({
         where: {
           NOT: {
             drawStatus: "open",
@@ -40,13 +43,15 @@ export default async function CekiyoLayout({
         },
       });
 
-      return draws.map((draw: Draw) => ({
+      const formatedDraws: Draw[] = draws.map((draw) => ({
         ...draw,
-        drawDate: new Date(draw.drawDate),
-        createdAt: new Date(draw.createdAt),
-        updatedAt: new Date(draw.updatedAt),
+        drawStatus: draw.drawStatus as "open" | "closed" | "finished",
+        drawUsers: (draw.drawUsers as unknown as string) ? JSON.parse(draw.drawUsers as unknown as string) : [],
+        drawWinners: (draw.drawWinners as unknown as string) ? JSON.parse(draw.drawWinners as unknown as string) : [],
+        drawOwner: (draw.drawOwner as unknown as string) ? JSON.parse(draw.drawOwner as unknown as string) : null,
         closeTime: draw.closeTime ? new Date(draw.closeTime) : undefined,
       }));
+      return formatedDraws.filter((draw) => !draw.closeTime || draw.closeTime > new Date());
     } catch (e) {
       console.error(e);
       return [] as Draw[];
@@ -55,32 +60,27 @@ export default async function CekiyoLayout({
 
   const activeDraws = await getActiveDraws();
   const oldDraws = await getOldDraws();
-  const myuser: User = {
-    topluyoId: "7",
-    nick: "buneakpelus",
-    image: "https://cdn.topluyo.com/logo/674be83b153d6.gif",
-    groupNick: "ef48b6c2a2678b8e",
-    groupName: "banl\u0131yorum herkesi",
-    isOwnerMode: true,
-  };
+  const cookieStore = await cookies();
+  const token = cookieStore.get("cekiyo-cookie")?.value || null;
+  const myuser: User = decoderToken(token as string) as User;
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-    <aside className="w-1/4 bg-white shadow-md p-4">
-      <DrawList
-        name="Aktif Çekilişler"
-        drawList={activeDraws}
-        user={myuser}
-      />
-      <DrawList
-        name="Kapanmış Çekilişler"
-        drawList={oldDraws}
-        user={myuser}
-      />
-    </aside>
-    <section className="flex-1 p-6 bg-gray-50">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 dark:bg-gray-900">
+      <aside className="w-full md:w-100 bg-white dark:bg-gray-800 shadow-md p-4 space-y-6">
+        <DrawList
+          name="Aktif Çekilişler"
+          drawList={activeDraws}
+          user={myuser}
+        />
+        <DrawList
+          name="Kapanmış Çekilişler"
+          drawList={oldDraws}
+          user={myuser}
+        />
+      </aside>
+      <section className="flex-1 p-6 bg-gray-50 dark:bg-gray-700">
       {children}
-    </section>
-  </div>
+      </section>
+    </div>
   )
 }
