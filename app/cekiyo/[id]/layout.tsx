@@ -1,5 +1,4 @@
 "use server";
-
 import React from "react";
 import Draw from "@/types/Draw";
 import User from "@/types/User";

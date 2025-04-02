@@ -1,10 +1,12 @@
 "use client";
 import Draw from "@/types/Draw";
 import { useEffect, useState } from "react";
+import { metadata } from "./metadata";
 
 interface Props {
   draw: Draw;
 }
+export const dynamicMetadata = metadata;
 
 export default function Page({ draw }: Props) {
   const [stateDraw, setStateDraw] = useState<Draw | null>(draw ? draw : null);

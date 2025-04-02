@@ -21,15 +21,24 @@ export default function DrawListElement({
       className="relative flex flex-row md:flex-row items-start justify-between p-4 md:p-6 border rounded-lg shadow-md bg-white dark:bg-gray-800"
     >
       <div className="relative flex-1 gap-4 md:gap-6 flex flex-col items-start justify-start padding-4 md:padding-6">
-        <h4 className="absolute top--10 left-0 text-sm font-bold text-gray-700 dark:text-gray-300">
+        <h4
+          className="absolute -top-3 -left-3 text-sm font-bold text-gray-700 dark:text-gray-300 truncate"
+          title={draw.drawOwner.groupName}
+        >
           {draw.drawOwner.groupName}
         </h4>
-        <div className="mt-10">
-          <h5 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-            {draw.drawOwner.nick}
+        <h4
+          className="absolute top-2 -left-3 text-sm font-bold text-gray-700 dark:text-gray-300 truncate"
+          title={draw.drawOwner.nick}
+        >
+          {draw.drawOwner.nick}
+        </h4>
+        <div className="mt-12 flex flex-col items-start justify-start space-y-2">
+          <h5 className="text-l font-semibold text-gray-800 dark:text-gray-100">
+            {draw.drawName}
           </h5>
           <p className="text-sm text-gray-600 dark:text-gray-400 break-words">
-            {draw.drawPrize}
+            Ödül:{draw.drawPrize}
           </p>
         </div>
       </div>
@@ -54,7 +63,6 @@ export default function DrawListElement({
                 {draw.closeTime && new Date(draw.closeTime) > new Date() ? (
                   <div className="flex flex-col items-end space-y-2">
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Son:{" "}
                       {new Date(draw.closeTime).toLocaleDateString("tr-TR", {
                         year: "numeric",
                         month: "2-digit",
@@ -81,7 +89,6 @@ export default function DrawListElement({
                 ) : (
                   <div className="flex flex-col items-end space-y-2">
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Kapandı:{" "}
                       {new Date(draw.closeTime).toLocaleDateString("tr-TR", {
                         year: "numeric",
                         month: "2-digit",
@@ -112,7 +119,6 @@ export default function DrawListElement({
         ) : (
           <div className="flex flex-col items-end space-y-2">
             <small className="text-sm text-gray-600 dark:text-gray-400">
-              Bitti:{" "}
               {new Date(draw.updatedAt).toLocaleDateString("tr-TR", {
                 year: "numeric",
                 month: "2-digit",

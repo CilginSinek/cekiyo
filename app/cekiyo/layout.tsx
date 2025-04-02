@@ -15,9 +15,11 @@ export default async function CekiyoLayout({
       const activeDraws = await prisma.draw.findMany({
         where: {
           drawStatus: "open",
+          drawDate: {
+            gte: new Date(),
+          },
         },
       });
-      console.log(activeDraws);
       const formatedDraws: Draw[] = activeDraws.map((draw) => ({
         ...draw,
         drawStatus: draw.drawStatus as "open" | "closed" | "finished",
@@ -37,21 +39,31 @@ export default async function CekiyoLayout({
     try {
       const draws = await prisma.draw.findMany({
         where: {
+          OR: [
+        {
           NOT: {
             drawStatus: "open",
           },
+        },
+        {
+          drawStatus: "open",
+          drawDate: {
+            lt: new Date(),
+          },
+        },
+          ],
         },
       });
 
       const formatedDraws: Draw[] = draws.map((draw) => ({
         ...draw,
         drawStatus: draw.drawStatus as "open" | "closed" | "finished",
-        drawUsers: (draw.drawUsers as unknown as string) ? JSON.parse(draw.drawUsers as unknown as string) : [],
-        drawWinners: (draw.drawWinners as unknown as string) ? JSON.parse(draw.drawWinners as unknown as string) : [],
-        drawOwner: (draw.drawOwner as unknown as string) ? JSON.parse(draw.drawOwner as unknown as string) : null,
+        drawUsers: Array.isArray(draw.drawUsers) ? draw.drawUsers as User[] : [],
+        drawWinners: Array.isArray(draw.drawWinners) ? draw.drawWinners as User[]: [],
+        drawOwner: draw.drawOwner as User,
         closeTime: draw.closeTime ? new Date(draw.closeTime) : undefined,
       }));
-      return formatedDraws.filter((draw) => !draw.closeTime || draw.closeTime > new Date());
+      return formatedDraws;
     } catch (e) {
       console.error(e);
       return [] as Draw[];
