@@ -6,6 +6,7 @@ import DrawList from "@/components/DrawList";
 import User from "@/types/User";
 import { cookies } from "next/headers";
 import { decoderToken } from "@/utils/handler";
+import HomeButton from "@/components/HomeButton";
 
 export default async function CekiyoLayout({
   children,
@@ -23,8 +24,12 @@ export default async function CekiyoLayout({
       const formatedDraws: Draw[] = activeDraws.map((draw) => ({
         ...draw,
         drawStatus: draw.drawStatus as "open" | "closed" | "finished",
-        drawUsers: Array.isArray(draw.drawUsers) ? draw.drawUsers as User[] : [],
-        drawWinners: Array.isArray(draw.drawWinners) ? draw.drawWinners as User[]: [],
+        drawUsers: Array.isArray(draw.drawUsers)
+          ? (draw.drawUsers as User[])
+          : [],
+        drawWinners: Array.isArray(draw.drawWinners)
+          ? (draw.drawWinners as User[])
+          : [],
         drawOwner: draw.drawOwner as User,
         closeTime: draw.closeTime ? new Date(draw.closeTime) : undefined,
       }));
@@ -40,17 +45,17 @@ export default async function CekiyoLayout({
       const draws = await prisma.draw.findMany({
         where: {
           OR: [
-        {
-          NOT: {
-            drawStatus: "open",
-          },
-        },
-        {
-          drawStatus: "open",
-          drawDate: {
-            lt: new Date(),
-          },
-        },
+            {
+              NOT: {
+                drawStatus: "open",
+              },
+            },
+            {
+              drawStatus: "open",
+              drawDate: {
+                lt: new Date(),
+              },
+            },
           ],
         },
       });
@@ -58,8 +63,12 @@ export default async function CekiyoLayout({
       const formatedDraws: Draw[] = draws.map((draw) => ({
         ...draw,
         drawStatus: draw.drawStatus as "open" | "closed" | "finished",
-        drawUsers: Array.isArray(draw.drawUsers) ? draw.drawUsers as User[] : [],
-        drawWinners: Array.isArray(draw.drawWinners) ? draw.drawWinners as User[]: [],
+        drawUsers: Array.isArray(draw.drawUsers)
+          ? (draw.drawUsers as User[])
+          : [],
+        drawWinners: Array.isArray(draw.drawWinners)
+          ? (draw.drawWinners as User[])
+          : [],
         drawOwner: draw.drawOwner as User,
         closeTime: draw.closeTime ? new Date(draw.closeTime) : undefined,
       }));
@@ -79,6 +88,7 @@ export default async function CekiyoLayout({
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 dark:bg-gray-900">
       <aside className="w-full md:w-100 bg-white dark:bg-gray-800 shadow-md p-4 space-y-6">
+        <HomeButton />
         <DrawList
           name="Aktif Çekilişler"
           drawList={activeDraws}
@@ -90,9 +100,9 @@ export default async function CekiyoLayout({
           user={myuser}
         />
       </aside>
-      <section className="flex-1 p-6 bg-gray-50 dark:bg-gray-700">
-      {children}
+      <section className="flex-1 bg-gray-50 dark:bg-gray-700">
+        {children}
       </section>
     </div>
-  )
+  );
 }

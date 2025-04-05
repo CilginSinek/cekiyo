@@ -3,13 +3,15 @@ import React from "react";
 import Draw from "@/types/Draw";
 import User from "@/types/User";
 import Page from "./page";
+import prisma from "@/utils/prisma";
+import DrawNotFound from "@/components/DrawNotFound";
 
 export default async function RootLayout({
   params,
 }: Readonly<{
   params: { id: string };
 }>) {
-  const id = await Promise.resolve(params); 
+  const myparams = await Promise.resolve(params); 
 
   const user: User = {
     topluyoId: "7",
@@ -20,21 +22,16 @@ export default async function RootLayout({
     isOwnerMode: true,
   };
 
-  const draw: Draw = {
-    id: parseInt(id.id, 10),
-    drawName: `Çekiliş ${id.id}`,
-    drawStatus: "open",
-    drawUsers: [],
-    drawWinners: [],
-    drawDescription: "Bu bir çekiliş açıklamasıdır.",
-    drawOwner: user,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    drawDate: new Date(),
-    closeTime: new Date(),
-    drawPrize: "Ödül",
-  };
+  const rawData = await prisma.draw.findUnique({
+    where: { id: parseInt(myparams.id) }
+  })
+  if(!rawData) {
+    return <DrawNotFound/>;
+  }
+
+  const myDraw = rawData as Draw;
+
   return (
-    <Page draw={draw} />
+    <Page draw={myDraw} />
   );
 }

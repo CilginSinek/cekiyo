@@ -12,7 +12,14 @@ const UserContext = createContext<{
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>({
+    topluyoId: "7",
+    nick: "buneakpelus",
+    image: "https://cdn.topluyo.com/logo/674be83b153d6.gif",
+    groupNick: "ef48b6c2a2678b8e",
+    groupName: "banlıyorum herkesi",
+    isOwnerMode: true,
+  });
 
   return (
     <UserContext.Provider value={{ user, setUser }}>
