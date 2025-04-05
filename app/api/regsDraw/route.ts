@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import prisma from "@/utils/prisma";
+import User from "@/types/user";
 
 export async function POST(req: NextRequest) {
   const cookieStore = await cookies();
@@ -106,12 +107,14 @@ export async function PUT(req: NextRequest) {
       return new NextResponse("Draw is closed", { status: 400 });
     }
 
+    const newDraw = draw.drawUsers as User[];
+
     if (Array.isArray(draw.drawUsers) && draw.drawUsers.includes(decoded)) {
       await prisma.draw.update({
         where: { id: drawIdNumber },
         data: {
           drawUsers: {
-            set: draw.drawUsers.filter((user) => user !== decoded),
+            set: newDraw.filter((user) => user.topluyoId !== decoded.topluyoId),
           },
         },
       });
