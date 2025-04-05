@@ -23,8 +23,6 @@ export default function Page({ draw }: Props) {
     return <div>Loading...</div>;
   }
 
-  console.log(stateDraw);
-
   return (
     <div className="flex flex-col lg:flex-row gap-6 p-4">
       {/* Left Section */}

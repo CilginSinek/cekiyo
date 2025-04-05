@@ -11,7 +11,7 @@ export default async function RootLayout({
 }: Readonly<{
   params: { id: string };
 }>) {
-  const myparams = await Promise.resolve(params); 
+  const myparams = await params;
 
   const user: User = {
     topluyoId: "7",
