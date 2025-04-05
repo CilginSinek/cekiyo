@@ -21,19 +21,8 @@ export default async function CekiyoLayout({
           },
         },
       });
-      const formatedDraws: Draw[] = activeDraws.map((draw) => ({
-        ...draw,
-        drawStatus: draw.drawStatus as "open" | "closed" | "finished",
-        drawUsers: Array.isArray(draw.drawUsers)
-          ? (draw.drawUsers as User[])
-          : [],
-        drawWinners: Array.isArray(draw.drawWinners)
-          ? (draw.drawWinners as User[])
-          : [],
-        drawOwner: draw.drawOwner as User,
-        closeTime: draw.closeTime ? new Date(draw.closeTime) : undefined,
-      }));
-      return formatedDraws;
+      const newDraws = activeDraws as Draw[];
+      return newDraws;
     } catch (e) {
       console.error(e);
       return [] as Draw[];
@@ -60,19 +49,8 @@ export default async function CekiyoLayout({
         },
       });
 
-      const formatedDraws: Draw[] = draws.map((draw) => ({
-        ...draw,
-        drawStatus: draw.drawStatus as "open" | "closed" | "finished",
-        drawUsers: Array.isArray(draw.drawUsers)
-          ? (draw.drawUsers as User[])
-          : [],
-        drawWinners: Array.isArray(draw.drawWinners)
-          ? (draw.drawWinners as User[])
-          : [],
-        drawOwner: draw.drawOwner as User,
-        closeTime: draw.closeTime ? new Date(draw.closeTime) : undefined,
-      }));
-      return formatedDraws;
+      const newDraws = draws as Draw[];
+      return newDraws;
     } catch (e) {
       console.error(e);
       return [] as Draw[];
