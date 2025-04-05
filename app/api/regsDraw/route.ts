@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import prisma from "@/utils/prisma";
-import User from "@/types/user";
+import User from "@/types/User";
 
 export async function POST(req: NextRequest) {
   const cookieStore = await cookies();
