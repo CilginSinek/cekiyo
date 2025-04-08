@@ -56,83 +56,40 @@ export default function DrawListElement({
             })}
         </small>
 
-        {draw.drawStatus !== "finished" ? (
-          <>
-            {draw.closeTime && (
-              <>
-                {draw.closeTime && new Date(draw.closeTime) > new Date() ? (
-                  <div className="flex flex-col items-end space-y-2">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      {new Date(draw.closeTime).toLocaleDateString("tr-TR", {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                      })}
-                    </span>
-                    <button
-                      onClick={() => handleSetDraw(draw.id, user)}
-                      className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 cursor-pointer w-full md:w-auto"
-                    >
-                      {draw.drawUsers.find(
-                        (userDraw) => userDraw.nick === user.nick
-                      )
-                        ? "Ayrıl"
-                        : "Katıl"}
-                    </button>
-                    <button
-                      onClick={() => handleDetail(draw.id)}
-                      className="px-3 py-2 text-sm font-medium text-white bg-gray-500 rounded hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 cursor-pointer w-full md:w-auto"
-                    >
-                      Detay
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-end space-y-2">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      {new Date(draw.closeTime).toLocaleDateString("tr-TR", {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                      })}
-                    </span>
-                    <button
-                      disabled
-                      className="px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded cursor-not-allowed dark:bg-gray-700 dark:text-gray-500"
-                    >
-                      {draw.drawUsers.find(
-                        (userDraw) => userDraw.nick === user.nick
-                      )
-                        ? "Ayrıl"
-                        : "Katıl"}
-                    </button>
-                    <button
-                      onClick={() => handleDetail(draw.id)}
-                      className="px-4 py-2 text-sm font-medium text-white bg-gray-500 rounded hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 cursor-pointer"
-                    >
-                      Detay
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-          </>
-        ) : (
-          <div className="flex flex-col items-end space-y-2">
-            <small className="text-sm text-gray-600 dark:text-gray-400">
-              {new Date(draw.updatedAt).toLocaleDateString("tr-TR", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-              })}
-            </small>
+        <div className="flex flex-col items-end space-y-2">
+          <small className="text-sm text-gray-600 dark:text-gray-400">
+            {new Date(draw.updatedAt).toLocaleDateString("tr-TR", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+            })}
+          </small>
+          {draw.drawStatus !== "finished" && (
             <button
-              onClick={() => handleDetail(draw.id)}
-              className="px-4 py-2 text-sm font-medium text-white bg-gray-500 rounded hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 cursor-pointer"
+              onClick={() => handleSetDraw(draw.id, user)}
+              className={`px-4 py-2 text-sm font-medium rounded w-full md:w-auto ${
+                new Date(draw.drawDate) < new Date() ||
+                (draw.closeTime && new Date(draw.closeTime) < new Date())
+                  ? "text-gray-400 bg-gray-200 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed"
+                  : "text-white bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 cursor-pointer"
+              }`}
+              disabled={
+                new Date(draw.drawDate) < new Date() ||
+                (draw.closeTime && new Date(draw.closeTime) < new Date())
+              }
             >
-              Detay
+              {draw.drawUsers.find((userDraw) => userDraw.nick === user.nick)
+                ? "Ayrıl"
+                : "Katıl"}
             </button>
-          </div>
-        )}
+          )}
+          <button
+            onClick={() => handleDetail(draw.id)}
+            className="px-4 py-2 text-sm font-medium text-white bg-gray-500 rounded hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 cursor-pointer"
+          >
+            Detay
+          </button>
+        </div>
       </div>
     </li>
   );

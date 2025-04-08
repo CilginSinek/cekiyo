@@ -2,8 +2,12 @@
 
 import { useState } from "react";
 import Draw from "@/types/Draw";
+import { useRouter } from "next/navigation";
+import { useDraws } from "@/context/drawContext";
 
 export default function Page() {
+  const router = useRouter();
+  const {setNewDrawinObj} = useDraws();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<Partial<Draw>>({
     drawName: "",
@@ -26,6 +30,27 @@ export default function Page() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const now = new Date();
+
+    if (formData.drawDate && new Date(formData.drawDate) < now) {
+      alert("Çekiliş tarihi şu anki tarihten önce olamaz.");
+      return;
+    }
+
+    if (formData.closeTime && new Date(formData.closeTime) < now) {
+      alert("Kayıt kapanış tarihi şu anki tarihten önce olamaz.");
+      return;
+    }
+
+    if (
+      formData.closeTime &&
+      formData.drawDate &&
+      formData.closeTime > formData.drawDate
+    ) {
+      alert("Kayıt kapanış tarihi, çekiliş tarihinden önce olmalıdır.");
+      return;
+    }
     fetch("/api/regsDraw", {
       method: "POST",
       headers: {
@@ -37,7 +62,8 @@ export default function Page() {
       .then((res) => {
         if (res.status === 200) {
           res.json().then((data) => {
-            console.log("Çekiliş oluşturuldu:", data);
+            setNewDrawinObj(data.draw);
+            router.push(`/cekiyo/${data.draw.id}`);
           });
         } else {
           console.error("Çekiliş oluşturulamadı:", res.statusText);
@@ -46,8 +72,7 @@ export default function Page() {
       .catch((err) => {
         console.error("Hata:", err);
       })
-      .finally(() => setShowForm(false)
-    )
+      .finally(() => setShowForm(false));
   };
   const today = new Date().toISOString().slice(0, 16);
   return (

@@ -46,11 +46,23 @@ export default function Page({ draw }: Props) {
           </h5>
         </div>
         <div className="flex justify-end mb-4">
-          <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-800 transition duration-300">
-            {stateDraw.drawUsers.some((id) => id.nick == user?.nick)
-              ? "Ayrıl"
-              : "Katıl"}
-          </button>
+        <button
+              // onClick={() => handleSetDraw(draw.id, user)}
+              className={`px-4 py-2 text-sm font-medium rounded w-full md:w-auto ${
+                new Date(draw.drawDate) < new Date() ||
+                (draw.closeTime && new Date(draw.closeTime) < new Date())
+                  ? "text-gray-400 bg-gray-200 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed"
+                  : "text-white bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 cursor-pointer"
+              }`}
+              disabled={
+                new Date(draw.drawDate) < new Date() ||
+                (draw.closeTime && new Date(draw.closeTime) < new Date())
+              }
+            >
+              {draw.drawUsers.find((userDraw) => userDraw.nick === (user ? user.nick: 0))
+                ? "Ayrıl"
+                : "Katıl"}
+            </button>
         </div>
         <div className="relative mt-6">
           <textarea
