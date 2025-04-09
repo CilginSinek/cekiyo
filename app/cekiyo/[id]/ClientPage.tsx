@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useUser } from "@/context/userContext";
 import DrawUserList from "@/components/DrawUserList";
 import DrawWinners from "@/components/DrawWinners";
+import { useDraws } from "@/context/drawContext";
 
 interface Props {
   draw: Draw;
@@ -11,7 +12,11 @@ interface Props {
 
 export default function Page({ draw }: Props) {
   const [stateDraw, setStateDraw] = useState<Draw | null>(draw || null);
+  const [winnerLength, setWinnerLength] = useState<number>(
+    draw.drawWinners.length || 1
+  );
   const { user } = useUser();
+  const {setOldDrawinObj} = useDraws();
 
   useEffect(() => {
     if (draw) {
@@ -21,6 +26,33 @@ export default function Page({ draw }: Props) {
   if (!stateDraw) {
     return <div>Loading...</div>;
   }
+
+  const handlestartDraw = () => {
+    if(draw.drawDate < new Date()) {
+      fetch(`${window.location.origin}/api/setDraw`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          draw_id: stateDraw.id,
+          count: 1,
+        }),
+      }).then((response)=>{
+        if(!response.ok) {
+          throw new Error("Failed to start draw");
+        }
+        return response.json();
+      }).then((data)=>{
+        const updatedDraw = data.draw as Draw;
+        setStateDraw(updatedDraw);
+        setWinnerLength(updatedDraw.drawWinners.length);
+        setOldDrawinObj(updatedDraw);
+      })
+    }
+
+  };
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 p-4">
@@ -46,23 +78,25 @@ export default function Page({ draw }: Props) {
           </h5>
         </div>
         <div className="flex justify-end mb-4">
-        <button
-              // onClick={() => handleSetDraw(draw.id, user)}
-              className={`px-4 py-2 text-sm font-medium rounded w-full md:w-auto ${
-                new Date(draw.drawDate) < new Date() ||
-                (draw.closeTime && new Date(draw.closeTime) < new Date())
-                  ? "text-gray-400 bg-gray-200 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed"
-                  : "text-white bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 cursor-pointer"
-              }`}
-              disabled={
-                new Date(draw.drawDate) < new Date() ||
-                (draw.closeTime && new Date(draw.closeTime) < new Date())
-              }
-            >
-              {draw.drawUsers.find((userDraw) => userDraw.nick === (user ? user.nick: 0))
-                ? "Ayrıl"
-                : "Katıl"}
-            </button>
+          <button
+            // onClick={() => handleSetDraw(draw.id, user)}
+            className={`px-4 py-2 text-sm font-medium rounded w-full md:w-auto ${
+              new Date(draw.drawDate) < new Date() ||
+              (draw.closeTime && new Date(draw.closeTime) < new Date())
+                ? "text-gray-400 bg-gray-200 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed"
+                : "text-white bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 cursor-pointer"
+            }`}
+            disabled={
+              new Date(draw.drawDate) < new Date() ||
+              (draw.closeTime && new Date(draw.closeTime) < new Date())
+            }
+          >
+            {draw.drawUsers.find(
+              (userDraw) => userDraw.nick === (user ? user.nick : 0)
+            )
+              ? "Ayrıl"
+              : "Katıl"}
+          </button>
         </div>
         <div className="relative mt-6">
           <textarea
@@ -92,28 +126,50 @@ export default function Page({ draw }: Props) {
 
       {/* Right Section */}
       {stateDraw.drawUsers.length > 0 && (
-        <div className="flex-1 flex flex-col lg:flex-row gap-4">
+        <div className="flex-1 flex flex-col lg:flex-row gap-2">
           <div className="flex-1 bg-gray-800 text-white p-4 rounded-lg shadow-md">
-            <DrawUserList />
+            <DrawUserList
+              users={stateDraw.drawUsers}
+              winners={stateDraw.drawWinners}
+            />
           </div>
           {(user?.nick == stateDraw.drawOwner.nick ||
             stateDraw.drawStatus == "finished") && (
             <div className="flex-1 bg-gray-800 text-white p-4 rounded-lg shadow-md">
               {user?.nick == stateDraw.drawOwner.nick && (
-                <button
+                <div className="flex flex-col gap-4">
+                  <button
                   disabled={stateDraw.drawStatus == "finished"}
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-800 transition duration-300 disabled:opacity-50"
-                >
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handlestartDraw}
+                  >
                   Çek
-                </button>
-              )}
-
-              {stateDraw.drawStatus == "finished" && (
-                <div className="mt-4">
-                  <p className="text-lg font-semibold">Kazananlar:</p>
-                  <DrawWinners winners={stateDraw.drawWinners} />
+                  </button>
+                  <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="winnerLength"
+                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Kazanan Sayısı:
+                  </label>
+                  <input
+                    id="winnerLength"
+                    type="number"
+                    min={1}
+                    max={stateDraw.drawUsers.length}
+                    value={winnerLength}
+                    onChange={(e) => setWinnerLength(Number(e.target.value))}
+                    className="w-20 px-2 py-1 bg-gray-200 text-gray-800 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                  />
+                  </div>
                 </div>
               )}
+              {stateDraw.drawStatus == "finished" && (                <div className="mt-4">
+                  <p className="text-lg font-semibold">Kazananlar:</p>
+                  <DrawWinners winners={stateDraw.drawWinners} />
+                </div>)
+
+              }
             </div>
           )}
         </div>

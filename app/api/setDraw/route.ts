@@ -43,22 +43,55 @@ export async function POST(req: NextRequest) {
     if (Array.isArray(drawUsers) && drawUsers.length === 0) {
       return new NextResponse("No users in the draw", { status: 400 });
     }
-    if(Array.isArray(drawUsers) && drawUsers.length > count) {
-        const winners = [];
+    if (Array.isArray(drawUsers) && drawUsers.length > count) {
+      const winners = [];
 
-        for (let i = 0; i < count; i++) {
-          const randomIndex = Math.floor(Math.random() * drawUsers.length);
-          const winner = drawUsers[randomIndex];
-          winners.push(winner);
-          drawUsers.splice(randomIndex, 1);
-        }
-        // send winners to response
-        //TODO*
-    }else if(Array.isArray(drawUsers) && drawUsers.length === count) {
-        const winners = drawUsers;
-        // send winners to response
-    }else {
-        return new NextResponse("Draw users are not enough", { status: 400 });
+      for (let i = 0; i < count; i++) {
+        const randomIndex = Math.floor(Math.random() * drawUsers.length);
+        const winner = drawUsers[randomIndex];
+        winners.push(winner);
+        drawUsers.splice(randomIndex, 1);
+      }
+
+      const updatedDraw = await prisma.draw.update({
+        where: {
+          id: draw_id,
+        },
+        data: {
+          drawWinners: winners,
+          drawStatus: "finished",
+          updatedAt: new Date(),
+        },
+      });
+
+      return NextResponse.json({
+        status: "success",
+        winners: winners,
+        draw: updatedDraw,
+        message: "Draw updated successfully",
+      });
+    } else if (Array.isArray(drawUsers) && drawUsers.length === count) {
+      const winners = drawUsers;
+
+      const updatedDraw = await prisma.draw.update({
+        where: {
+          id: draw_id,
+        },
+        data: {
+          drawWinners: winners,
+          drawStatus: "finished",
+          updatedAt: new Date(),
+        },
+      });
+
+      return NextResponse.json({
+        status: "success",
+        winners: winners,
+        draw: updatedDraw,
+        message: "Draw updated successfully",
+      });
+    } else {
+      return new NextResponse("Draw users are not enough", { status: 400 });
     }
   } catch (e) {
     console.error(e);

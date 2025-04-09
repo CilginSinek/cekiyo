@@ -12,10 +12,12 @@ const DrawContext = createContext<{
   drawsObj: drawsObjType | null;
   setDrawsObj: (drawsObj: drawsObjType | null) => void;
   setNewDrawinObj: (draw: Draw) => void;
+  setOldDrawinObj: (draw: Draw) => void;
 }>({
   drawsObj: null,
   setDrawsObj: () => {},
   setNewDrawinObj: () => {},
+  setOldDrawinObj: () => {},
 });
 
 export const DrawProvider = ({ children }: { children: React.ReactNode }) => {
@@ -30,8 +32,25 @@ export const DrawProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const setOldDrawinObj = (draw: Draw) => {
+    if (drawsObj) {
+      const newOldDraws = drawsObj.oldDraws.map((d: Draw) => {
+        if (d.id == draw.id) {
+          return draw;
+        }
+        return d;
+      });
+      setDrawsObj({
+        ...drawsObj,
+        oldDraws: newOldDraws,
+      });
+    }
+  };
+
   return (
-    <DrawContext.Provider value={{ drawsObj, setDrawsObj, setNewDrawinObj }}>
+    <DrawContext.Provider
+      value={{ drawsObj, setDrawsObj, setNewDrawinObj, setOldDrawinObj }}
+    >
       {children}
     </DrawContext.Provider>
   );
