@@ -18,7 +18,13 @@ export async function GET(req: Request) {
   });
   // Set cookie in response
   const cookieStore = await cookies();
-  cookieStore.set("cekiyo-cookie", token)
+  cookieStore.set("cekiyo-cookie", token, {
+    path: "/",
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    maxAge: 60 * 60 * 24,
+  })
 
   // Return response
   return NextResponse.json({
