@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { decryptTPAuth } from './crypto';
 import { cookies } from 'next/headers';
 
-const API_KEY = process.env.TP_API_KEY; // .env.local’a TP_API_KEY olarak ekle
+const API_KEY = process.env.NEXT_PUBLIC_TP_API_KEY; // .env.local’a TP_API_KEY olarak ekle
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 
   // Eğer ?">start" parametresi yoksa, auth endpoint’ine yönlendir:
   if (!url.searchParams.has('>start')) {
-    return NextResponse.redirect('https://topluyo.com/!auth/' + process.env.APP_ID);
+    return NextResponse.redirect('https://topluyo.com/!auth/' + process.env.NEXT_PUBLIC_APP_ID);
   }
 
   // Yükleme animasyonu vs. sayfa için burada bir HTML dönebilirsin:

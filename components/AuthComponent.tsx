@@ -1,84 +1,68 @@
+// app/auth/page.js
 "use client";
 import { useEffect } from "react";
-import { useUser } from "../context/userContext";
-import { decryptUserData } from "@/utils/decript";
 import { useRouter } from "next/navigation";
 
-const AUTH_IFRAME_URL = `https://topluyo.com/!auth/${process.env.NEXT_PUBLIC_APP_ID}`;
-
 export default function AuthPage() {
-  const { setUser, user } = useUser();
   const router = useRouter();
 
-
   useEffect(() => {
-    // Mesajları dinle:
-    const handleMessage = async (event: MessageEvent) => {
-      // Güvenlik için origin kontrolü yapın:
-      console.dir(event);
-      if (event.origin !== new URL(AUTH_IFRAME_URL).origin) return;
-      let data;
-      if (typeof event.data === "string") {
-        try {
-          data = JSON.parse(event.data);
-        } catch (error) {
-          console.error("Invalid JSON data:", error);
-          return;
+    function onMessage(e: MessageEvent) {
+      try {
+        const data = JSON.parse(e.data);
+        if (data[">auth"]) {
+          // formData ile POST et
+          fetch("/api/auth", {
+            method: "POST",
+            body: new URLSearchParams({
+              ">auth": data[">auth"],
+              redirect: "1",
+            }),
+          })
+            .then((res) => res.json())
+            .then((json) => {
+              // Üst pencereye redirect URL’i yolla
+              if (window.top) {
+                window.top.postMessage(
+                  JSON.stringify({
+                    action: "<redirect",
+                    redirect: json.redirect,
+                  }),
+                  "*"
+                );
+              }
+            });
         }
-      }
-      if (!data || typeof data !== "object") {
-        console.error("Invalid data format:", data);
-        return;
-      }
-      if (data[">auth"]) {
-        const user = await decryptUserData(data[">auth"]);
-        if (!user) {
-          console.error("Invalid user data:", data[">auth"]);
-          return;
-        }
-        setUser(user);
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener("message", handleMessage);
-    };
-  }, [setUser]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const isInIframe = window.self !== window.top;
-
-    if (isInIframe) {
-      window.parent.postMessage(JSON.stringify({ action: "<auth" }), "*");
+      } catch {}
     }
-  }, [window]);
-
-  useEffect(() => {
-    if (user) {
-      router.replace("/cekiyo");
+    window.addEventListener("message", onMessage);
+    // Başlatma isteğini frame dışında gönder
+    if (window.top === window) {
+      window.location.href = `https://topluyo.com/!auth/${process.env.NEXT_PUBLIC_APP_ID}`;
+    } else {
+      if (window.top) {
+        window.top.postMessage(
+          JSON.stringify({ action: "<auth", url: window.location.href }),
+          "*"
+        );
+      }
     }
-  }, [user]);
+    return () => window.removeEventListener("message", onMessage);
+  }, [router]);
 
-  // Eğer iframe içinde değilsek, kendi içimize iframe aç:
-  const isInIframe =
-    typeof window !== "undefined" && window.self !== window.top;
-  if (!isInIframe) {
-    return (
-      <div style={{ width: "100%", height: "100vh", border: "none" }}>
-        <iframe
-          src={AUTH_IFRAME_URL}
-          style={{ width: "100%", height: "100%" }}
-          title="Auth"
-        />
-      </div>
-    );
-  }
-
-  // İframe içindeyken, üstten gelecek user bilgisinin gelmesini bekle:
-  return <p>Üst pencereden kullanıcı bilgisi bekleniyor…</p>;
+  return (
+    <div
+      style={{
+        position: "fixed",
+        bottom: "50%",
+        left: "50%",
+        transform: "translate(-50%,-50%)",
+        fontSize: "5vmin",
+        opacity: 0.7,
+        fontFamily: "system-ui",
+      }}
+    >
+      Yönlendiriliyor…
+    </div>
+  );
 }
