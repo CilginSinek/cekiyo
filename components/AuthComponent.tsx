@@ -10,32 +10,42 @@ export default function AuthPage() {
   const { setUser, user } = useUser();
   const router = useRouter();
 
+
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const handleMessage = (event: MessageEvent) => {
-      try {
-        const data = JSON.parse(event.data);
-
-        if (data.action == "<auth") {
-          decryptUserData(data.user).then((decryptedUser) => {
-            if (decryptedUser) {
-              setUser(decryptedUser);
-              router.replace("/cekiyo");
-            }
-          });
+    // Mesajları dinle:
+    const handleMessage = async (event: MessageEvent) => {
+      // Güvenlik için origin kontrolü yapın:
+      if (event.origin !== new URL(AUTH_IFRAME_URL).origin) return;
+      let data;
+      if (typeof event.data === "string") {
+        try {
+          data = JSON.parse(event.data);
+        } catch (error) {
+          console.error("Invalid JSON data:", error);
+          return;
         }
-      } catch (error) {
-        console.log("Error parsing message data:", error, event.data);
+      }
+      if (!data || typeof data !== "object") {
+        console.error("Invalid data format:", data);
+        return;
+      }
+      if (data[">auth"]) {
+        const user = await decryptUserData(data[">auth"]);
+        if (!user) {
+          console.error("Invalid user data:", data[">auth"]);
+          return;
+        }
+        setUser(user);
       }
     };
 
     window.addEventListener("message", handleMessage);
 
+    // Cleanup
     return () => {
       window.removeEventListener("message", handleMessage);
     };
-  }, []);
+  }, [setUser]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
