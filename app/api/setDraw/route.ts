@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
         message: "Draw updated successfully",
       });
     } else if (Array.isArray(drawUsers) && drawUsers.length === count) {
-      const winners = drawUsers;
+      const winners = drawUsers.sort(() => Math.random() - Math.random());
 
       const updatedDraw = await prisma.draw.update({
         where: {
