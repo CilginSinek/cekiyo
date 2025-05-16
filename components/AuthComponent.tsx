@@ -15,6 +15,7 @@ export default function AuthPage() {
     // Mesajları dinle:
     const handleMessage = async (event: MessageEvent) => {
       // Güvenlik için origin kontrolü yapın:
+      console.dir(event);
       if (event.origin !== new URL(AUTH_IFRAME_URL).origin) return;
       let data;
       if (typeof event.data === "string") {
