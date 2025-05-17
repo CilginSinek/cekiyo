@@ -34,7 +34,9 @@ export default function AuthPage() {
       try {
         const data = JSON.parse(event.data);
         if (data[">login"]) {
-          handleFetch(data[">login"]);
+          handleFetch(data[">login"]).then(() => {
+            event.source?.postMessage(JSON.stringify({ action: "<redirect", redirect: location.href }));
+          });
         }
       } catch (e) {
         console.log(e);
@@ -47,7 +49,7 @@ export default function AuthPage() {
       window.parent.postMessage(
         JSON.stringify({
           action: "<auth",
-          url: window.location.href,
+          url: "https://cekiyo.vercel.app/?%3Estart=%3Estart",
         }),
         "https://topluyo.com"
       );
