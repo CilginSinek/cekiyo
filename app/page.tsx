@@ -3,7 +3,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function Home() {
-  const [showAuth, setShowAuth] = useState(false);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-gray-100">

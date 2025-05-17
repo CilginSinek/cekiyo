@@ -51,10 +51,13 @@ export default function AuthPage() {
       window.parent.postMessage(
         JSON.stringify({
           action: "<auth",
-          url: "https://cekiyo.vercel.app/?%3Estart=%3Estart",
+          url: location.href,
         }),
         "https://topluyo.com"
       );
+    }
+    else{
+      window.location.href = "https://topluyo.com/!auth/" + process.env.NEXT_PUBLIC_APP_ID;
     }
 
     window.addEventListener("message", handleMessage);
