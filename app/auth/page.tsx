@@ -35,7 +35,9 @@ export default function AuthPage() {
         const data = JSON.parse(event.data);
         if (data[">login"]) {
           handleFetch(data[">login"]).then(() => {
-            window.parent.postMessage(JSON.stringify({ action: "<redirect", redirect: "/cekiyo" }), "https://topluyo.com");
+            if (window.self !== window.parent) {
+              window.parent.postMessage(JSON.stringify({ action: "<redirect", redirect: "https://cekiyo.vercel.app/cekiyo" }), "https://topluyo.com");
+            }
           });
         }
       } catch (e) {
