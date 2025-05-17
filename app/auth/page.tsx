@@ -18,7 +18,7 @@ export default function AuthPage() {
     });
     const data = await res.json();
     if (data.success) {
-      setUser(data.user);
+      setUser(data.data);
       router.push("/cekiyo");
     } else {
       setPageError(data.message);
