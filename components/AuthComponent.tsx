@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/userContext";
+import { decryptUserData } from "@/utils/decript";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -10,13 +11,14 @@ export default function AuthPage() {
 
   useEffect(() => {
     if (!window) return;
-    const handleMessage = (event: MessageEvent) => {
-      console.log(event.data);
+    const handleMessage = async (event: MessageEvent) => {
+      console.log(event.data, event.origin);
       if (event.origin !== "https://topluyo.com") return;
       try{
         const data = JSON.parse(event.data);
-        if (data.action === ">login") {
-            window.location.href = "https://topluyo.com/Destek";
+        if (data[">login"]) {
+          const user = await decryptUserData(data[">login"]);
+          console.log(user);
         }
       }catch(e){
         console.log(e);

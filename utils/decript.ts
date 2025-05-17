@@ -54,7 +54,7 @@ function decrypt(encryptedData: string, password: string): string {
  */
 export async function decryptUserData(encryptedData: string) {
   try {
-    const password = process.env.APP_SECRET_KEY || "";
+    const password = process.env.TP_API_KEY || "";
     const decryptedData = decrypt(encryptedData, password);
 
     if (!decryptedData) {
