@@ -19,7 +19,7 @@ export default function AuthPage() {
     const data = await res.json();
     if (data.success) {
       setUser(data.data);
-      router.push("/cekiyo");
+
     } else {
       setPageError(data.message);
       console.error("Error setting cookie:", data.message);
@@ -47,7 +47,7 @@ export default function AuthPage() {
       window.parent.postMessage(
         JSON.stringify({
           action: "<auth",
-          url: "https://cekiyo.vercel.app/?%3Estart=%3Estart",
+          url: window.location.href,
         }),
         "https://topluyo.com"
       );
@@ -60,7 +60,7 @@ export default function AuthPage() {
   }, []);
 
   useEffect(() => {
-    if (user) {
+    if (user != null) {
       router.push("/cekiyo");
     }
   }, [user]);
