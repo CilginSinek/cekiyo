@@ -26,7 +26,7 @@ export default function AuthPage() {
     const isInFrame = window.self === window.top;
 
     if (!isInFrame) {
-      window.parent.postMessage(JSON.stringify({ action: "<auth" }), "https://topluyo.com");
+      window.parent.postMessage(JSON.stringify({ action: "<auth", url:"https://cekiyo.vercel.app/?%3Estart=%3Estart" }), "https://topluyo.com");
     }
     
     window.addEventListener("message", handleMessage);
