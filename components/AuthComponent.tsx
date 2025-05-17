@@ -7,16 +7,20 @@ import { useUser } from "@/context/userContext";
 export default function AuthPage() {
   const router = useRouter();
   const { user } = useUser();
-  const [messages, setMessages] = useState<{ data: any; origin: string }[]>([]);
 
   useEffect(() => {
     if (!window) return;
     const handleMessage = (event: MessageEvent) => {
       console.log(event.data);
-      setMessages((prev) => [
-        ...prev,
-        { data: event.data, origin: event.origin },
-      ]);
+      if (event.origin !== "https://topluyo.com") return;
+      try{
+        const data = JSON.parse(event.data);
+        if (data.action === ">login") {
+            window.location.href = "https://topluyo.com/Destek";
+        }
+      }catch(e){
+        console.log(e);
+      }
     };
 
     const isInFrame = window.self === window.top;
@@ -67,16 +71,6 @@ export default function AuthPage() {
       }}
     >
       Yönlendiriliyor…
-      <div style={{ fontSize: "2vmin", marginTop: 16, opacity: 1 }}>
-        {messages.map((msg, i) => (
-          <div key={i}>
-            <b>origin:</b> {msg.origin}
-            <br />
-            <b>data:</b> {JSON.stringify(msg.data)}
-            <hr />
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
