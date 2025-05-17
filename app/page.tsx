@@ -1,10 +1,17 @@
 "use client";
 import Link from "next/link";
 import AuthPage from "@/components/AuthComponent";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const [showAuth, setShowAuth] = useState(false);
+
+  useEffect(() => {
+    if (!window) return;
+    const handleMessage = (event: MessageEvent) => {
+      console.log(event.data);
+    };
+  }, [window]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-gray-100">

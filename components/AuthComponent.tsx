@@ -2,53 +2,42 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@/context/userContext";
 
 export default function AuthPage() {
   const router = useRouter();
+  const { user } = useUser();
 
   useEffect(() => {
-    function onMessage(e: MessageEvent) {
-      try {
-        const data = JSON.parse(e.data);
-        if (data[">auth"]) {
-          // formData ile POST et
-          fetch("/api/auth", {
-            method: "POST",
-            body: new URLSearchParams({
-              ">auth": data[">auth"],
-              redirect: "1",
-            }),
-          })
-            .then((res) => res.json())
-            .then((json) => {
-              // Üst pencereye redirect URL’i yolla
-              if (window.top) {
-                window.top.postMessage(
-                  JSON.stringify({
-                    action: "<redirect",
-                    redirect: json.redirect,
-                  }),
-                  "*"
-                );
-              }
-            });
-        }
-      } catch {}
+    if (!window) return;
+    const isInFrame = window.self === window.top;
+    if (!isInFrame) {
+      window.top?.postMessage({ action: "<auth" }, "*");
     }
-    window.addEventListener("message", onMessage);
-    // Başlatma isteğini frame dışında gönder
-    if (window.top === window) {
-      window.location.href = `https://topluyo.com/!auth/${process.env.NEXT_PUBLIC_APP_ID}`;
-    } else {
-      if (window.top) {
-        window.top.postMessage(
-          JSON.stringify({ action: "<auth", url: window.location.href }),
-          "*"
-        );
-      }
+  });
+
+  useEffect(() => {
+    if (user) {
+      router.push("/cekiyo");
     }
-    return () => window.removeEventListener("message", onMessage);
-  }, [router]);
+  }, [user]);
+
+  // Check if the current window is not inside an iframe
+  if (typeof window !== "undefined" && window.self === window.top) {
+    return (
+      <iframe
+        src={"https://topluyo.com/!auth/" + process.env.NEXT_PUBLIC_APP_ID}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          border: "none",
+        }}
+      />
+    );
+  }
 
   return (
     <div
