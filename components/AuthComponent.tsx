@@ -10,11 +10,21 @@ export default function AuthPage() {
 
   useEffect(() => {
     if (!window) return;
+    const handleMessage = (event: MessageEvent) => {
+      console.log(event.data);
+    };
+
     const isInFrame = window.self === window.top;
+
     if (!isInFrame) {
       window.top?.postMessage({ action: "<auth" }, "*");
     }
-  });
+    
+    window.addEventListener("message", handleMessage);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
 
   useEffect(() => {
     if (user) {

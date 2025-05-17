@@ -6,17 +6,6 @@ import { useEffect, useState } from "react";
 export default function Home() {
   const [showAuth, setShowAuth] = useState(false);
 
-  useEffect(() => {
-    if (!window) return;
-    const handleMessage = (event: MessageEvent) => {
-      console.log(event.data);
-    };
-    window.addEventListener("message", handleMessage);
-    return () => {
-      window.removeEventListener("message", handleMessage);
-    };
-  }, [window]);
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-gray-100">
       <h1 className="text-4xl font-bold mb-4 text-blue-400">Çekiyo</h1>
