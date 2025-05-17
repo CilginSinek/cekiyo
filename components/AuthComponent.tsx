@@ -1,23 +1,28 @@
 // app/auth/page.js
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/userContext";
 
 export default function AuthPage() {
   const router = useRouter();
   const { user } = useUser();
+  const [messages, setMessages] = useState<{ data: any; origin: string }[]>([]);
 
   useEffect(() => {
     if (!window) return;
     const handleMessage = (event: MessageEvent) => {
       console.log(event.data);
+      setMessages((prev) => [
+        ...prev,
+        { data: event.data, origin: event.origin },
+      ]);
     };
 
     const isInFrame = window.self === window.top;
 
     if (!isInFrame) {
-      window.top?.postMessage({ action: "<auth" }, "*");
+      window.top?.postMessage(JSON.stringify({ action: "<auth" }), "*");
     }
     
     window.addEventListener("message", handleMessage);
@@ -62,6 +67,16 @@ export default function AuthPage() {
       }}
     >
       Yönlendiriliyor…
+      <div style={{ fontSize: "2vmin", marginTop: 16, opacity: 1 }}>
+        {messages.map((msg, i) => (
+          <div key={i}>
+            <b>origin:</b> {msg.origin}
+            <br />
+            <b>data:</b> {JSON.stringify(msg.data)}
+            <hr />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
