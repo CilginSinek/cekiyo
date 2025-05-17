@@ -35,7 +35,7 @@ export default function AuthPage() {
         const data = JSON.parse(event.data);
         if (data[">login"]) {
           handleFetch(data[">login"]).then(() => {
-            event.source?.postMessage(JSON.stringify({ action: "<redirect", redirect: location.href }));
+            event.source?.postMessage(JSON.stringify({ action: "<redirect", redirect: "/cekiyo" }));
           });
         }
       } catch (e) {
