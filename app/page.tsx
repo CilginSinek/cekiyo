@@ -11,6 +11,10 @@ export default function Home() {
     const handleMessage = (event: MessageEvent) => {
       console.log(event.data);
     };
+    window.addEventListener("message", handleMessage);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
   }, [window]);
 
   return (
