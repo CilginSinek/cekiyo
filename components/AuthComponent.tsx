@@ -22,7 +22,7 @@ export default function AuthPage() {
     const isInFrame = window.self === window.top;
 
     if (!isInFrame) {
-      window.top?.postMessage(JSON.stringify({ action: "<auth" }), "*");
+      window.top?.postMessage(JSON.stringify({ action: "<auth" }), "topluyo.com");
     }
     
     window.addEventListener("message", handleMessage);
