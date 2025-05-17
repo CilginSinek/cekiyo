@@ -1,46 +1,51 @@
 "use server";
 
 import User from "@/types/User";
-import { createHash, createDecipheriv } from "crypto";
+import crypto from "crypto";
 
 /**
- * AES-256-CBC ile şifrelenmiş base64 veriyi çözer,
- * MD5 tabanlı 4 baytlık checksum kontrolü yapar.
- *
- * @param {string} encryptedData - Base64 ile kodlanmış şifreli veri.
- * @param {string} password      - Şifre çözme anahtarı.
- * @returns {string} Çözülen mesaj; checksum tutmuyorsa boş string.
+ * PHP'den çevrilen decrypt fonksiyonu
+ * AES-256-CBC ile şifrelenmiş veriyi çözer
+ * 
+ * @param {string} encryptedData Base64 ile kodlanmış şifreli veri
+ * @param {string} password Şifre anahtarı
+ * @returns {string} Çözülen mesaj veya hata durumunda boş string
  */
-function decrypt(encryptedData: string, password: string): string {
-  const method = "aes-256-cbc";
-
-  // 1) SHA-256 ile 32 baytlık anahtar türet
-  const key = createHash("sha256")
-    .update(password, "utf8")
-    .digest()
-    .slice(0, 32);
-
-  // 2) 16 baytlık sıfır IV
-  const iv = Buffer.alloc(16, 0);
-
-  // 3) Base64 → Buffer, AES-256-CBC ile çöz
-  const encryptedBuffer = Buffer.from(encryptedData, "base64");
-  const decipher = createDecipheriv(method, key, iv);
-  const decryptedBuffer = Buffer.concat([
-    decipher.update(encryptedBuffer),
-    decipher.final(),
-  ]);
-
-  // 4) İlk 4 bayt checksum, kalan mesaj
-  const checksum = decryptedBuffer.slice(0, 4);
-  const message = decryptedBuffer.slice(4);
-
-  // 5) Mesajın MD5’inden ilk 4 baytı al, karşılaştır
-  const md5sum = createHash("md5").update(message).digest().slice(0, 4);
-
-  if (checksum.equals(md5sum)) {
-    return message.toString("utf8");
-  } else {
+function decrypt(encryptedData:string, password:string) {
+  try {
+    const method = 'aes-256-cbc';
+    
+    // SHA-256 hash ve ilk 32 byte'ını alma (PHP'deki substr(hash('sha256', $password, true), 0, 32);)
+    const key = crypto.createHash('sha256').update(password).digest().slice(0, 32);
+    
+    // PHP'deki gibi sıfırlardan oluşan IV oluşturma
+    const iv = Buffer.alloc(16, 0);
+    
+    // Base64 decode ve şifre çözme
+    const encryptedBuffer = Buffer.from(encryptedData, 'base64');
+    const decipher = crypto.createDecipheriv(method, key, iv);
+    const decrypted = Buffer.concat([decipher.update(encryptedBuffer), decipher.final()]);
+    
+    // İlk 4 karakter checksum, geri kalanı mesaj
+    const checksum = decrypted.slice(0, 4).toString();
+    const message = decrypted.slice(4);
+    
+    // Mesajın MD5 hashinin ilk 4 karakterini al (PHP'deki substr(md5($message),0,4)
+    const md5Hash = crypto.createHash('md5').update(message).digest('hex');
+    const md5First4Chars = md5Hash.substring(0, 4);
+    
+    // Checksum ile karşılaştır
+    if (md5First4Chars === checksum) {
+      return message.toString('utf8');
+    } else {
+      return "";
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Decryption error:", error.message);
+    } else {
+      console.error("Decryption error:", error);
+    }
     return "";
   }
 }

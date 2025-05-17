@@ -1,18 +1,33 @@
-import { cookies } from 'next/headers'
+import { cookies } from "next/headers";
 import jsonwebtoken from "jsonwebtoken";
 import { NextResponse } from "next/server";
+import { decryptUserData } from "@/utils/decript";
 
+export async function POST(req: Request) {
+  const body = await req.json();
+  if (!body?.userToken) {
+    return NextResponse.json({
+      success: false,
+      message: "User token not provided",
+    });
+  }
 
-export async function GET(req: Request) {
-    // Get User from token in body
-  const user = {
-    topluyoId: "7",
-    nick: "buneakpelus",
-    image: "https://cdn.topluyo.com/logo/674be83b153d6.gif",
-    groupNick: "ef48b6c2a2678b8e",
-    groupName: "banl\u0131yorum herkesi",
-    isOwnerMode: true,
-  };
+  // Decrypt the user token
+  const decryptedData = await decryptUserData(body.userToken);
+  if (!decryptedData) {
+    return NextResponse.json({
+      success: false,
+      message: "Decryption failed",
+    });
+  }
+  if (decryptedData.topluyoId == "-1") {
+    return NextResponse.json({
+      success: false,
+      message: "User not found",
+    });
+  }
+
+  const user = decryptedData;
   const token = jsonwebtoken.sign(user, process.env.JWT_SECRET! as string, {
     expiresIn: "1d",
   });
@@ -24,7 +39,7 @@ export async function GET(req: Request) {
     secure: true,
     sameSite: "none",
     maxAge: 60 * 60 * 24,
-  })
+  });
 
   // Return response
   return NextResponse.json({

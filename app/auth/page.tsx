@@ -1,27 +1,42 @@
-// app/auth/page.js
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/userContext";
-import { decryptUserData } from "@/utils/decript";
 
 export default function AuthPage() {
   const router = useRouter();
-  const { user } = useUser();
+  const { user, setUser } = useUser();
+  const [pageError, setPageError] = useState<string|null>(null);
+
+  const handleFetch = async (userToken: string) => {
+    const res = await fetch("/api/setCookie", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userToken }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      setUser(data.user);
+      router.push("/cekiyo");
+    } else {
+      setPageError(data.message);
+      console.error("Error setting cookie:", data.message);
+    }
+  };
 
   useEffect(() => {
     if (!window) return;
     const handleMessage = async (event: MessageEvent) => {
       console.log(event.data, event.origin);
       if (event.origin !== "https://topluyo.com") return;
-      try{
+      try {
         const data = JSON.parse(event.data);
         if (data[">login"]) {
-          decryptUserData(data[">login"]).then((userData)=>{
-            console.log(userData);
-          })
+          handleFetch(data[">login"]);
         }
-      }catch(e){
+      } catch (e) {
         console.log(e);
       }
     };
@@ -29,9 +44,15 @@ export default function AuthPage() {
     const isInFrame = window.self === window.top;
 
     if (!isInFrame) {
-      window.parent.postMessage(JSON.stringify({ action: "<auth", url:"https://cekiyo.vercel.app/?%3Estart=%3Estart" }), "https://topluyo.com");
+      window.parent.postMessage(
+        JSON.stringify({
+          action: "<auth",
+          url: "https://cekiyo.vercel.app/?%3Estart=%3Estart",
+        }),
+        "https://topluyo.com"
+      );
     }
-    
+
     window.addEventListener("message", handleMessage);
     return () => {
       window.removeEventListener("message", handleMessage);
@@ -58,6 +79,24 @@ export default function AuthPage() {
           border: "none",
         }}
       />
+    );
+  }
+
+  if(pageError) {
+    return (
+      <div
+        style={{
+          position: "fixed",
+          bottom: "50%",
+          left: "50%",
+          transform: "translate(-50%,-50%)",
+          fontSize: "5vmin",
+          opacity: 0.7,
+          fontFamily: "system-ui",
+        }}
+      >
+        {pageError}
+      </div>
     );
   }
 
