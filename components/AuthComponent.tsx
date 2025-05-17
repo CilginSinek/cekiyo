@@ -17,8 +17,9 @@ export default function AuthPage() {
       try{
         const data = JSON.parse(event.data);
         if (data[">login"]) {
-          const user = await decryptUserData(data[">login"]);
-          console.log(user);
+          decryptUserData(data[">login"]).then((userData)=>{
+            console.log(userData);
+          })
         }
       }catch(e){
         console.log(e);
