@@ -51,7 +51,7 @@ export default function AuthPage() {
       window.parent.postMessage(
         JSON.stringify({
           action: "<auth",
-          url: location.href,
+          url: "https://cekiyo.vercel.app/?%3Estart=%3Estart",
         }),
         "https://topluyo.com"
       );
