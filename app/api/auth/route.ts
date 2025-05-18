@@ -8,6 +8,18 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Origin", "https://topluyo.com");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  // Preflight için OPTIONS isteğini kontrol et (önemli)
+  if (req.method === "OPTIONS") {
+    res.status(200).end();
+    return;
+  }
+
   if (req.method !== "POST" || !req.body[">auth"]) {
     return res.status(400).send("[Auth problem]");
   }
@@ -55,6 +67,7 @@ export default async function handler(
     sameSite: "none",
     path: "/",
   });
+
   res.setHeader("Set-Cookie", cookieStr);
 
   // If they requested a plain redirect response
