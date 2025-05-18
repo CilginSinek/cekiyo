@@ -1,4 +1,5 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { serialize } from "cookie";
 import User from "@/types/User";
 import jsonwebtoken from "jsonwebtoken";
@@ -58,42 +59,51 @@ function decrypt(encryptedData: string, password: string) {
   }
 }
 
-export async function OPTIONS(req: NextApiRequest, res: NextApiResponse) {
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Allow-Origin", "https://topluyo.com");
-  res.setHeader(
+export async function OPTIONS(req: NextRequest) {
+  const headers = new Headers();
+  headers.set("Access-Control-Allow-Credentials", "true");
+  headers.set("Access-Control-Allow-Origin", "https://topluyo.com");
+  headers.set(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept"
   );
-  res.status(200).end();
-  return;
+  return new NextResponse(null, { status: 200, headers });
 }
 
-export async function POST(req: NextApiRequest, res: NextApiResponse) {
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Allow-Origin", "https://topluyo.com");
-  res.setHeader(
+export async function POST(req: NextRequest) {
+  const headers = new Headers();
+  headers.set("Access-Control-Allow-Credentials", "true");
+  headers.set("Access-Control-Allow-Origin", "https://topluyo.com");
+  headers.set(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept"
   );
-  if (req.method !== "POST" || !req.body[">auth"]) {
-    return res.status(400).send("[Auth problem]");
+
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return new NextResponse("[Auth problem]", { status: 400, headers });
+  }
+
+  if (!body[">auth"]) {
+    return new NextResponse("[Auth problem]", { status: 400, headers });
   }
   const API_KEY = process.env.TP_API_KEY;
   if (!API_KEY) {
-    return res.status(500).send("[Auth problem]");
+    return new NextResponse("[Auth problem]", { status: 500, headers });
   }
-  const authCode = req.body[">auth"];
-  const plain = await decrypt(authCode, API_KEY);
+  const authCode = body[">auth"];
+  const plain = decrypt(authCode, API_KEY);
   if (!plain) {
-    return res.status(401).send("[Auth problem]");
+    return new NextResponse("[Auth problem]", { status: 401, headers });
   }
 
   let payload;
   try {
     payload = JSON.parse(plain);
   } catch {
-    return res.status(400).send("[Auth problem]");
+    return new NextResponse("[Auth problem]", { status: 400, headers });
   }
 
   // Let the caller decide where to go next
@@ -124,16 +134,16 @@ export async function POST(req: NextApiRequest, res: NextApiResponse) {
     path: "/",
   });
 
-  res.setHeader("Set-Cookie", cookieStr);
+  headers.set("Set-Cookie", cookieStr);
 
   // If they requested a plain redirect response
-  if (req.body.redirect === "1") {
-    return res.status(200).json({ redirect: redirectUrl });
+  if (body.redirect === "1") {
+    return NextResponse.json({ redirect: redirectUrl }, { status: 200, headers });
   }
 
   // Otherwise do a server-side redirect
-  res.writeHead(302, { Location: redirectUrl });
-  res.end();
+  headers.set("Location", redirectUrl);
+  return new NextResponse(null, { status: 302, headers });
 }
 
 // Example redirect logic; tailor to your app
