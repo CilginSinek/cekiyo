@@ -11,7 +11,7 @@ import crypto from "crypto";
  * @param {string} password Şifre anahtarı
  * @returns {string} Çözülen mesaj veya hata durumunda boş string
  */
-function decrypt(encryptedData:string, password:string) {
+export function decrypt(encryptedData:string, password:string) {
   try {
     const method = 'aes-256-cbc';
     
@@ -57,7 +57,7 @@ function decrypt(encryptedData:string, password:string) {
  * @param {string} password - Şifre çözme anahtarı.
  * @returns {User | null} Çözülen kullanıcı verisi veya null.
  */
-export async function decryptUserData(encryptedData: string) {
+export async function decryptUserData(encryptedData: string, API_KEY: string | undefined) {
   try {
     const password = process.env.TP_API_KEY || "";
     const decryptedData = decrypt(encryptedData, password);

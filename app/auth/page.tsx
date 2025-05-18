@@ -1,111 +1,53 @@
-"use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useUser } from "@/context/userContext";
+import { useEffect } from "react";
 
 export default function AuthPage() {
-  const router = useRouter();
-  const { user, setUser } = useUser();
-  const [pageError, setPageError] = useState<string|null>(null);
-
-  const handleFetch = async (userToken: string) => {
-    const res = await fetch("/api/setCookie", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ userToken }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      setUser(data.data);
-
-    } else {
-      setPageError(data.message);
-      console.error("Error setting cookie:", data.message);
-    }
-  };
-
   useEffect(() => {
     if (!window) return;
-    const handleMessage = async (event: MessageEvent) => {
-      console.log(event.data, event.origin);
-      if (event.origin !== "https://topluyo.com") return;
+    // Notify parent we’re ready to receive
+    if (window.top) {
+      window.top.postMessage(
+        JSON.stringify({ action: "<auth", url: location.href }),
+        "*"
+      );
+    }
+
+    // If not in an iframe, go straight to the provider
+    if (window.top === window) {
+      window.location.href =
+        "https://topluyo.com/!auth/" + process.env.NEXT_PUBLIC_APP_ID;
+    }
+
+    const handler = (event: MessageEvent) => {
+      if (!event.origin.endsWith("topluyo.com")) return;
+      let data;
       try {
-        const data = JSON.parse(event.data);
-        if (data[">login"]) {
-          handleFetch(data[">login"]).then(() => {
-            if (window.self !== window.parent) {
-              window.parent.postMessage(JSON.stringify({ action: "<redirect", redirect: "https://cekiyo.vercel.app/cekiyo" }), "https://topluyo.com");
+        data = JSON.parse(event.data);
+      } catch {
+        return;
+      }
+
+      if (data[">auth"] || data[">login"]) {
+        const token = data[">auth"] || data[">login"];
+        fetch("/api/auth", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ">auth": token, redirect: "1" }),
+        })
+          .then((r) => r.json())
+          .then(({ redirect }) => {
+            if (window.top) {
+              window.top.postMessage(
+                JSON.stringify({ action: "<redirect", redirect }),
+                "*"
+              );
             }
           });
-        }
-      } catch (e) {
-        console.log(e);
       }
     };
 
-    const isInFrame = window.self === window.top;
-
-    if (!isInFrame) {
-      window.parent.postMessage(
-        JSON.stringify({
-          action: "<auth",
-          url: "https://cekiyo.vercel.app/?%3Estart=%3Estart",
-        }),
-        "https://topluyo.com"
-      );
-    }
-    else{
-      window.location.href = "https://topluyo.com/!auth/" + process.env.NEXT_PUBLIC_APP_ID;
-    }
-
-    window.addEventListener("message", handleMessage);
-    return () => {
-      window.removeEventListener("message", handleMessage);
-    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
   }, []);
-
-  useEffect(() => {
-    if (user != null) {
-      router.push("/cekiyo");
-    }
-  }, [user]);
-
-  // Check if the current window is not inside an iframe
-  if (typeof window !== "undefined" && window.self === window.top) {
-    return (
-      <iframe
-        src={"https://topluyo.com/!auth/" + process.env.NEXT_PUBLIC_APP_ID}
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100vw",
-          height: "100vh",
-          border: "none",
-        }}
-      />
-    );
-  }
-
-  if(pageError) {
-    return (
-      <div
-        style={{
-          position: "fixed",
-          bottom: "50%",
-          left: "50%",
-          transform: "translate(-50%,-50%)",
-          fontSize: "5vmin",
-          opacity: 0.7,
-          fontFamily: "system-ui",
-        }}
-      >
-        {pageError}
-      </div>
-    );
-  }
 
   return (
     <div
@@ -114,9 +56,9 @@ export default function AuthPage() {
         bottom: "50%",
         left: "50%",
         transform: "translate(-50%,-50%)",
+        fontFamily: "system-ui",
         fontSize: "5vmin",
         opacity: 0.7,
-        fontFamily: "system-ui",
       }}
     >
       Yönlendiriliyor…
