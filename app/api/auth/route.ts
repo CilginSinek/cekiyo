@@ -101,28 +101,39 @@ export async function POST(req: NextRequest) {
 
   const redirectUrl = getRedirectUrl(payload);
   
-  // Create a response object
-  const response = body.redirect === "1"
-    ? NextResponse.json({ redirect: redirectUrl })
-    : NextResponse.redirect(redirectUrl);
-    
-  // Set the cookie using Next.js Response object
-  response.cookies.set({
-    name: "cekiyo-cookie",
-    value: token,
-    httpOnly: true,
-    secure: true,
-    sameSite: "none",
-    path: "/",
-    maxAge: 60 * 60 * 24, // 1 day
-  });
+  // Create two cookie strings - one HTTP only and one client-readable
+  const httpOnlyCookie = `cekiyo-cookie=${token}; Max-Age=${60 * 60 * 24}; Path=/; SameSite=None; Secure; HttpOnly`;
+  const clientCookie = `cekiyo-client-token=${token}; Max-Age=${60 * 60 * 24}; Path=/; SameSite=None; Secure`;
   
-  // Add CORS headers
+  // Create response headers including CORS headers
+  const headers = new Headers();
+  headers.append('Set-Cookie', httpOnlyCookie);
+  headers.append('Set-Cookie', clientCookie);
+  
+  // Add all CORS headers
   Object.entries(corsHeaders(origin)).forEach(([key, value]) => {
-    response.headers.set(key, value);
+    headers.set(key, value);
   });
   
-  return response;
+  if (body.redirect === "1") {
+    // For API responses, include token in the body too
+    return new Response(JSON.stringify({ 
+      redirect: redirectUrl, 
+      token: token,  // Include token in response body
+      success: true
+    }), { 
+      status: 200, 
+      headers 
+    });
+  } else {
+    // For direct redirects
+    headers.set('Location', redirectUrl);
+    return new Response(null, { 
+      status: 302, 
+      headers 
+    });
+  }
+
 }
 
 function corsHeaders(origin: string): Record<string, string> {

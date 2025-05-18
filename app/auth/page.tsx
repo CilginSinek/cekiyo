@@ -36,13 +36,21 @@ export default function AuthPage() {
           body: JSON.stringify({ ">auth": token, redirect: "1" }),
         })
           .then((r) => r.json())
-          .then(({ redirect }) => {
+          .then((response) => {
+            const { redirect, token } = response;
+            
             // Check if cookies were set by looking at document.cookie
             console.log("Cookie status:", document.cookie ? "Cookie exists" : "No cookies");
             
+            // If we received a token in the response, store it in localStorage as fallback
+            if (token) {
+              console.log("Received token from API, storing in localStorage");
+              localStorage.setItem("cekiyo-auth-token", token);
+            }
+            
             if (window.top) {
               window.top.postMessage(
-                JSON.stringify({ action: "<redirect", redirect }),
+                JSON.stringify({ action: "<redirect", redirect, hasToken: !!token }),
                 "*"
               );
             } else {
@@ -52,6 +60,10 @@ export default function AuthPage() {
           })
           .catch((error) => {
             console.error("Authentication error:", error);
+            // Try to redirect to home page if authentication fails
+            if (window.top === window) {
+              window.location.href = "/";
+            }
           });
       }
     };
