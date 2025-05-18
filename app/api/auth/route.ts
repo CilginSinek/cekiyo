@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { serialize } from "cookie";
 import User from "@/types/User";
 import jsonwebtoken from "jsonwebtoken";
 import crypto from "crypto";
@@ -48,14 +47,14 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return new Response("[Auth problem]", {
+    return NextResponse.json({ error: "[Auth problem]" }, {
       status: 400,
       headers: corsHeaders(origin),
     });
   }
 
   if (!body[">auth"]) {
-    return new Response("[Auth problem]", {
+    return NextResponse.json({ error: "[Auth problem]" }, {
       status: 400,
       headers: corsHeaders(origin),
     });
@@ -63,7 +62,7 @@ export async function POST(req: NextRequest) {
 
   const API_KEY = process.env.TP_API_KEY;
   if (!API_KEY) {
-    return new Response("[Auth problem]", {
+    return NextResponse.json({ error: "[Auth problem]" }, {
       status: 500,
       headers: corsHeaders(origin),
     });
@@ -71,7 +70,7 @@ export async function POST(req: NextRequest) {
 
   const plain = decrypt(body[">auth"], API_KEY);
   if (!plain) {
-    return new Response("[Auth problem]", {
+    return NextResponse.json({ error: "[Auth problem]" }, {
       status: 401,
       headers: corsHeaders(origin),
     });
@@ -81,7 +80,7 @@ export async function POST(req: NextRequest) {
   try {
     payload = JSON.parse(plain);
   } catch {
-    return new Response("[Auth problem]", {
+    return NextResponse.json({ error: "[Auth problem]" }, {
       status: 400,
       headers: corsHeaders(origin),
     });
@@ -100,43 +99,42 @@ export async function POST(req: NextRequest) {
     expiresIn: "1d",
   });
 
-  const cookieStr = serialize("cekiyo-cookie", token, {
+  const redirectUrl = getRedirectUrl(payload);
+  
+  // Create a response object
+  const response = body.redirect === "1"
+    ? NextResponse.json({ redirect: redirectUrl })
+    : NextResponse.redirect(redirectUrl);
+    
+  // Set the cookie using Next.js Response object
+  response.cookies.set({
+    name: "cekiyo-cookie",
+    value: token,
     httpOnly: true,
     secure: true,
     sameSite: "none",
     path: "/",
-    maxAge: 60 * 60 * 24,
+    maxAge: 60 * 60 * 24, // 1 day
   });
-
-  const headers = corsHeaders(origin);
-  headers.set("Set-Cookie", cookieStr);
-
-  const redirectUrl = getRedirectUrl(payload);
-
-  if (body.redirect === "1") {
-    return new Response(JSON.stringify({ redirect: redirectUrl }), {
-      status: 200,
-      headers,
-    });
-  }
-
-  headers.set("Location", redirectUrl);
-  return new Response(null, {
-    status: 302,
-    headers,
+  
+  // Add CORS headers
+  Object.entries(corsHeaders(origin)).forEach(([key, value]) => {
+    response.headers.set(key, value);
   });
+  
+  return response;
 }
 
-function corsHeaders(origin: string): Headers {
-  const headers = new Headers();
-  headers.set("Access-Control-Allow-Credentials", "true");
-  headers.set("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
-  headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, Origin, X-Requested-With, Accept");
-  headers.set("Access-Control-Allow-Origin", origin);
-  headers.set("X-Frame-Options", "ALLOWALL");
-  headers.set("Content-Security-Policy", "frame-ancestors *");
-  headers.set("Content-Type", "application/json");
-  return headers;
+function corsHeaders(origin: string): Record<string, string> {
+  return {
+    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, Origin, X-Requested-With, Accept",
+    "Access-Control-Allow-Origin": origin,
+    "X-Frame-Options": "ALLOWALL",
+    "Content-Security-Policy": "frame-ancestors *",
+    "Content-Type": "application/json"
+  };
 }
 
 function getRedirectUrl(userPayload: { next?: string }) {

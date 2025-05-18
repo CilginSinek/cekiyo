@@ -32,17 +32,26 @@ export default function AuthPage() {
         fetch("/api/auth", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          credentials: "include", // Important for cookie handling
           body: JSON.stringify({ ">auth": token, redirect: "1" }),
         })
           .then((r) => r.json())
           .then(({ redirect }) => {
+            // Check if cookies were set by looking at document.cookie
+            console.log("Cookie status:", document.cookie ? "Cookie exists" : "No cookies");
+            
             if (window.top) {
               window.top.postMessage(
                 JSON.stringify({ action: "<redirect", redirect }),
                 "*"
               );
+            } else {
+              // If not in iframe, redirect directly
+              window.location.href = redirect;
             }
+          })
+          .catch((error) => {
+            console.error("Authentication error:", error);
           });
       }
     };
