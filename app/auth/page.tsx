@@ -31,6 +31,7 @@ export default function AuthPage() {
         fetch("/api/auth", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ ">auth": token, redirect: "1" }),
         })
           .then((r) => r.json())
