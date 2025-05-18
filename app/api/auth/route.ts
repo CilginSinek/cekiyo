@@ -7,37 +7,44 @@ import crypto from "crypto";
 /**
  * PHP'den çevrilen decrypt fonksiyonu
  * AES-256-CBC ile şifrelenmiş veriyi çözer
- * 
+ *
  * @param {string} encryptedData Base64 ile kodlanmış şifreli veri
  * @param {string} password Şifre anahtarı
  * @returns {string} Çözülen mesaj veya hata durumunda boş string
  */
-function decrypt(encryptedData:string, password:string) {
+function decrypt(encryptedData: string, password: string) {
   try {
-    const method = 'aes-256-cbc';
-    
+    const method = "aes-256-cbc";
+
     // SHA-256 hash ve ilk 32 byte'ını alma (PHP'deki substr(hash('sha256', $password, true), 0, 32);)
-    const key = crypto.createHash('sha256').update(password).digest().slice(0, 32);
-    
+    const key = crypto
+      .createHash("sha256")
+      .update(password)
+      .digest()
+      .slice(0, 32);
+
     // PHP'deki gibi sıfırlardan oluşan IV oluşturma
     const iv = Buffer.alloc(16, 0);
-    
+
     // Base64 decode ve şifre çözme
-    const encryptedBuffer = Buffer.from(encryptedData, 'base64');
+    const encryptedBuffer = Buffer.from(encryptedData, "base64");
     const decipher = crypto.createDecipheriv(method, key, iv);
-    const decrypted = Buffer.concat([decipher.update(encryptedBuffer), decipher.final()]);
-    
+    const decrypted = Buffer.concat([
+      decipher.update(encryptedBuffer),
+      decipher.final(),
+    ]);
+
     // İlk 4 karakter checksum, geri kalanı mesaj
     const checksum = decrypted.slice(0, 4).toString();
     const message = decrypted.slice(4);
-    
+
     // Mesajın MD5 hashinin ilk 4 karakterini al (PHP'deki substr(md5($message),0,4)
-    const md5Hash = crypto.createHash('md5').update(message).digest('hex');
+    const md5Hash = crypto.createHash("md5").update(message).digest("hex");
     const md5First4Chars = md5Hash.substring(0, 4);
-    
+
     // Checksum ile karşılaştır
     if (md5First4Chars === checksum) {
-      return message.toString('utf8');
+      return message.toString("utf8");
     } else {
       return "";
     }
@@ -51,23 +58,24 @@ function decrypt(encryptedData:string, password:string) {
   }
 }
 
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export async function OPTIONS(req: NextApiRequest, res: NextApiResponse) {
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Access-Control-Allow-Origin", "https://topluyo.com");
   res.setHeader(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept"
   );
-  // Preflight için OPTIONS isteğini kontrol et (önemli)
-  if (req.method === "OPTIONS") {
-    res.status(200).end();
-    return;
-  }
+  res.status(200).end();
+  return;
+}
 
+export async function POST(req: NextApiRequest, res: NextApiResponse) {
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Origin", "https://topluyo.com");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
   if (req.method !== "POST" || !req.body[">auth"]) {
     return res.status(400).send("[Auth problem]");
   }
