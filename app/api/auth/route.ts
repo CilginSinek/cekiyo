@@ -1,8 +1,56 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { serialize } from "cookie";
-import { decrypt } from "../../../utils/decript";
 import User from "@/types/User";
 import jsonwebtoken from "jsonwebtoken";
+import crypto from "crypto";
+
+/**
+ * PHP'den çevrilen decrypt fonksiyonu
+ * AES-256-CBC ile şifrelenmiş veriyi çözer
+ * 
+ * @param {string} encryptedData Base64 ile kodlanmış şifreli veri
+ * @param {string} password Şifre anahtarı
+ * @returns {string} Çözülen mesaj veya hata durumunda boş string
+ */
+function decrypt(encryptedData:string, password:string) {
+  try {
+    const method = 'aes-256-cbc';
+    
+    // SHA-256 hash ve ilk 32 byte'ını alma (PHP'deki substr(hash('sha256', $password, true), 0, 32);)
+    const key = crypto.createHash('sha256').update(password).digest().slice(0, 32);
+    
+    // PHP'deki gibi sıfırlardan oluşan IV oluşturma
+    const iv = Buffer.alloc(16, 0);
+    
+    // Base64 decode ve şifre çözme
+    const encryptedBuffer = Buffer.from(encryptedData, 'base64');
+    const decipher = crypto.createDecipheriv(method, key, iv);
+    const decrypted = Buffer.concat([decipher.update(encryptedBuffer), decipher.final()]);
+    
+    // İlk 4 karakter checksum, geri kalanı mesaj
+    const checksum = decrypted.slice(0, 4).toString();
+    const message = decrypted.slice(4);
+    
+    // Mesajın MD5 hashinin ilk 4 karakterini al (PHP'deki substr(md5($message),0,4)
+    const md5Hash = crypto.createHash('md5').update(message).digest('hex');
+    const md5First4Chars = md5Hash.substring(0, 4);
+    
+    // Checksum ile karşılaştır
+    if (md5First4Chars === checksum) {
+      return message.toString('utf8');
+    } else {
+      return "";
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Decryption error:", error.message);
+    } else {
+      console.error("Decryption error:", error);
+    }
+    return "";
+  }
+}
+
 
 export default async function handler(
   req: NextApiRequest,
@@ -28,7 +76,7 @@ export default async function handler(
     return res.status(500).send("[Auth problem]");
   }
   const authCode = req.body[">auth"];
-  const plain = decrypt(authCode, API_KEY);
+  const plain = await decrypt(authCode, API_KEY);
   if (!plain) {
     return res.status(401).send("[Auth problem]");
   }
