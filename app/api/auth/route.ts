@@ -51,7 +51,7 @@ export default async function handler(
   const cookieStr = serialize("cekiyo-cookie", token, {
     maxAge: 60 * 60 * 24 * 1,
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true,
     sameSite: "none",
     path: "/",
   });
