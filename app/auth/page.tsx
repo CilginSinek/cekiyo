@@ -7,7 +7,7 @@ export default function AuthPage() {
     // Notify parent we’re ready to receive
     if (window.top) {
       window.top.postMessage(
-        JSON.stringify({ action: "<auth", url: location.href }),
+        JSON.stringify({ action: "<auth", url: "https://cekiyo.vercel.app/?%3Estart=%3Estart" }),
         "*"
       );
     }
