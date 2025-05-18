@@ -56,20 +56,29 @@ export default function AuthPage() {
         console.log("Auth response received");
         console.log("Cookie status:", document.cookie ? "Cookie exists" : "No cookies");
         
-        // Check localStorage
-        try {
-          console.log("LocalStorage debug:", localStorage.getItem("cekiyo-debug"));
-          console.log("LocalStorage token exists:", !!localStorage.getItem("cekiyo-auth-token"));
-        } catch (e) {
-          console.error("LocalStorage check error:", e);
-        }
-        
-        // Redirect as needed
+        // For cross-domain authentication, we need to pass the token to the parent window
         if (window.top && window.top !== window) {
+          // Send token data to parent window for storage
           window.top.postMessage(
-            JSON.stringify({ action: "<redirect", redirect, hasToken: !!token }),
+            JSON.stringify({
+              action: "<auth-complete",
+              redirect,
+              token,          // Send the actual token to parent
+              userInfo: data.userInfo || {},
+              timestamp: Date.now()
+            }),
             "*"
           );
+          
+          console.log("Auth token sent to parent window");
+          
+          // Also store locally as fallback
+          try {
+            localStorage.setItem("cekiyo-auth-token", token);
+            localStorage.setItem("cekiyo-auth-time", String(Date.now()));
+          } catch (e) {
+            console.error("LocalStorage error:", e);
+          }
         } else {
           // If not in iframe, redirect directly
           window.location.href = redirect || "/cekiyo";

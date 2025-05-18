@@ -115,11 +115,12 @@ export async function GET(req: NextRequest) {
           console.error("LocalStorage error:", e);
         }
         
-        // Send response back to parent
+        // Send response back to parent with user information
         window.parent.postMessage(JSON.stringify({
           action: "<auth-response",
           redirect: "${redirectUrl}",
           token: "${jwtToken}",
+          userInfo: ${JSON.stringify(modifedUser)},
           success: true
         }), "*");
       </script>
