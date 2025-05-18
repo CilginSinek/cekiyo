@@ -5,6 +5,13 @@ import { jwtVerify } from "jose"; // Import jwtVerify from jose
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET); // Use TextEncoder for the secret
 
 export async function middleware(req: NextRequest) {
+  const response = NextResponse.next();
+
+  if (req.nextUrl.pathname.startsWith('/api/auth')) {
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set('Access-Control-Allow-Origin', req.headers.get('origin') || '*');
+  }
+
   if (req.nextUrl.pathname.startsWith("/cekiyo")) {
     const cookie = req.cookies.get("cekiyo-cookie");
 
@@ -36,5 +43,5 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  return NextResponse.next(); // Allow other routes to proceed
+  return response;
 }
