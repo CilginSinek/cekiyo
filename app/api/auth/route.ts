@@ -130,8 +130,11 @@ export async function POST(req: NextRequest) {
 function corsHeaders(origin: string): Headers {
   const headers = new Headers();
   headers.set("Access-Control-Allow-Credentials", "true");
+  headers.set("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
+  headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, Origin, X-Requested-With, Accept");
   headers.set("Access-Control-Allow-Origin", origin);
-  headers.set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  headers.set("X-Frame-Options", "ALLOWALL");
+  headers.set("Content-Security-Policy", "frame-ancestors *");
   headers.set("Content-Type", "application/json");
   return headers;
 }
